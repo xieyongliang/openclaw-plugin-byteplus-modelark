@@ -1,0 +1,14 @@
+{
+  "id": "byteplus-modelark",
+  "name": "BytePlus ModelArk",
+  "description": "Image generation (Seedream) and video generation (Seedance) via BytePlus ARK API.",
+  "capabilityTags": ["provider", "image-generation", "video-generation"],
+  "providerAuthEnvVars": {
+    "byteplus": ["BYTEPLUS_API_KEY"]
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}
