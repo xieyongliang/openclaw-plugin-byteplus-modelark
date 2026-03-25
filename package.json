@@ -51,6 +51,9 @@
     "install": {
       "npmSpec": "openclaw-plugin-byteplus-modelark",
       "defaultChoice": "npm"
+    },
+    "compat": {
+      "pluginApi": ">=2026.3.22"
     }
   }
 }
