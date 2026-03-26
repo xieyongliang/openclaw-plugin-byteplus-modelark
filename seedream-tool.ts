@@ -75,17 +75,20 @@ function resolveBaseUrl(api: OpenClawPluginApi): string {
 }
 
 function resolveApiKey(api: OpenClawPluginApi): string | null {
-  // Check env var first
+  // Check env var directly
   const fromEnv = process.env.BYTEPLUS_API_KEY?.trim();
   if (fromEnv) return fromEnv;
 
-  // Also check the OpenClaw provider config (set via `openclaw config set models.providers.byteplus.apiKey`)
-  const providerApiKey = (api.config as Record<string, unknown> & {
-    models?: { providers?: Record<string, { apiKey?: string }> };
-  })?.models?.providers?.[BYTEPLUS_PROVIDER_ID]?.apiKey?.trim();
+  // Also pick up the key if the bundled byteplus language-model provider is configured
+  // (models.providers.byteplus.apiKey). Its value may be a literal key or an env var name.
+  const providerApiKey = (
+    api.config as {
+      models?: { providers?: Record<string, { apiKey?: string }> };
+    }
+  )?.models?.providers?.[BYTEPLUS_PROVIDER_ID]?.apiKey?.trim();
 
-  // If the value looks like an env var name (e.g. "BYTEPLUS_API_KEY"), resolve it from env
   if (providerApiKey) {
+    // If value looks like an env var marker (e.g. "BYTEPLUS_API_KEY"), resolve from env
     if (/^[A-Z][A-Z0-9_]+$/u.test(providerApiKey)) {
       return process.env[providerApiKey]?.trim() || null;
     }
@@ -126,9 +129,9 @@ export function createSeedreamTool(api: OpenClawPluginApi) {
           status: "error",
           error:
             "BytePlus API key is not configured. " +
-            "Set it by running: export BYTEPLUS_API_KEY=<your_key> " +
-            "or permanently via: openclaw config set models.providers.byteplus.apiKey <your_key>. " +
-            "Get your key from https://console.byteplus.com/ark",
+            "Set the BYTEPLUS_API_KEY environment variable before starting OpenClaw: " +
+            "export BYTEPLUS_API_KEY=<your_key>. " +
+            "Get your key from the BytePlus ARK console: https://console.byteplus.com/ark",
         });
       }
 
