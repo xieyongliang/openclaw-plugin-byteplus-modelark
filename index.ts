@@ -1,16 +1,15 @@
+import type { AnyAgentTool } from "openclaw/plugin-sdk/plugin-entry";
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
-import { buildSeedreamImageGenerationProvider } from "./image-generation-provider.js";
-import { buildSeedanceVideoGenerationProvider } from "./video-generation-provider.js";
-
-const PLUGIN_ID = "byteplus-modelark";
+import { createSeedanceTool } from "./seedance-tool.js";
+import { createSeedreamTool } from "./seedream-tool.js";
 
 export default definePluginEntry({
-  id: PLUGIN_ID,
+  id: "byteplus-modelark",
   name: "BytePlus ModelArk Media",
   description:
     "Seedream image generation and Seedance video generation via BytePlus ARK API",
   register(api) {
-    api.registerImageGenerationProvider(buildSeedreamImageGenerationProvider());
-    api.registerVideoGenerationProvider(buildSeedanceVideoGenerationProvider());
+    api.registerTool(createSeedreamTool(api) as AnyAgentTool);
+    api.registerTool(createSeedanceTool(api) as AnyAgentTool);
   },
 });

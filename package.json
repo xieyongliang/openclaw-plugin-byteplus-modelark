@@ -27,8 +27,8 @@
   "files": [
     "index.ts",
     "models.ts",
-    "image-generation-provider.ts",
-    "video-generation-provider.ts",
+    "seedream-tool.ts",
+    "seedance-tool.ts",
     "openclaw.plugin.json",
     "README.md",
     "LICENSE"
