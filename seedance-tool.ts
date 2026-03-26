@@ -74,8 +74,25 @@ function resolveBaseUrl(api: OpenClawPluginApi): string {
   return (direct || DEFAULT_BASE_URL).replace(/\/+$/u, "");
 }
 
-function resolveApiKey(): string | null {
-  return process.env.BYTEPLUS_API_KEY?.trim() || null;
+function resolveApiKey(api: OpenClawPluginApi): string | null {
+  // Check env var first
+  const fromEnv = process.env.BYTEPLUS_API_KEY?.trim();
+  if (fromEnv) return fromEnv;
+
+  // Also check the OpenClaw provider config (set via `openclaw config set models.providers.byteplus.apiKey`)
+  const providerApiKey = (api.config as Record<string, unknown> & {
+    models?: { providers?: Record<string, { apiKey?: string }> };
+  })?.models?.providers?.[BYTEPLUS_PROVIDER_ID]?.apiKey?.trim();
+
+  // If the value looks like an env var name (e.g. "BYTEPLUS_API_KEY"), resolve it from env
+  if (providerApiKey) {
+    if (/^[A-Z][A-Z0-9_]+$/u.test(providerApiKey)) {
+      return process.env[providerApiKey]?.trim() || null;
+    }
+    return providerApiKey;
+  }
+
+  return null;
 }
 
 type ContentGenerationTaskID = { id: string };
@@ -203,11 +220,15 @@ export function createSeedanceTool(api: OpenClawPluginApi) {
       "Generate videos using BytePlus Seedance. Supports text-to-video and image-to-video (first/last frame). Returns the saved video file path.",
     parameters: SeedanceToolSchema,
     execute: async (_toolCallId: string, rawParams: Record<string, unknown>) => {
-      const apiKey = resolveApiKey();
+      const apiKey = resolveApiKey(api);
       if (!apiKey) {
         return jsonResult({
           status: "error",
-          error: "BYTEPLUS_API_KEY environment variable is not set.",
+          error:
+            "BytePlus API key is not configured. " +
+            "Set it by running: export BYTEPLUS_API_KEY=<your_key> " +
+            "or permanently via: openclaw config set models.providers.byteplus.apiKey <your_key>. " +
+            "Get your key from https://console.byteplus.com/ark",
         });
       }
 
