@@ -4,7 +4,7 @@ import { createSeedanceTool } from "./seedance-tool.js";
 import { createSeedreamTool } from "./seedream-tool.js";
 
 export default definePluginEntry({
-  id: "byteplus-modelark",
+  id: "openclaw-plugin-byteplus-modelark",
   name: "BytePlus ModelArk Media",
   description:
     "Seedream image generation and Seedance video generation via BytePlus ARK API",
