@@ -1,5 +1,5 @@
 {
-  "id": "openclaw-plugin-byteplus-modelark",
+  "id": "byteplus-modelark",
   "name": "BytePlus ModelArk",
   "description": "Image generation (Seedream) and video generation (Seedance) via BytePlus ARK API.",
   "capabilityTags": ["tools"],
