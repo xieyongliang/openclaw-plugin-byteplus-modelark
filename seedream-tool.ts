@@ -3,7 +3,8 @@ import OpenAI from "openai";
 import { jsonResult, readNumberParam, readStringParam } from "openclaw/plugin-sdk/agent-runtime";
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk/plugin-entry";
 import { saveMediaBuffer } from "openclaw/plugin-sdk/media-runtime";
-import { BYTEPLUS_PROVIDER_ID, SEEDREAM_DEFAULT_MODEL } from "./models.js";
+import { resolveApiKey } from "./auth.js";
+import { SEEDREAM_DEFAULT_MODEL } from "./models.js";
 
 const DEFAULT_BASE_URL = "https://ark.ap-southeast.bytepluses.com/api/v3";
 const DEFAULT_MIME = "image/png";
@@ -74,29 +75,6 @@ function resolveBaseUrl(api: OpenClawPluginApi): string {
   return (direct || DEFAULT_BASE_URL).replace(/\/+$/u, "");
 }
 
-function resolveApiKey(api: OpenClawPluginApi): string | null {
-  // Check env var directly
-  const fromEnv = process.env.BYTEPLUS_API_KEY?.trim();
-  if (fromEnv) return fromEnv;
-
-  // Also pick up the key if the bundled byteplus language-model provider is configured
-  // (models.providers.byteplus.apiKey). Its value may be a literal key or an env var name.
-  const providerApiKey = (
-    api.config as {
-      models?: { providers?: Record<string, { apiKey?: string }> };
-    }
-  )?.models?.providers?.[BYTEPLUS_PROVIDER_ID]?.apiKey?.trim();
-
-  if (providerApiKey) {
-    // If value looks like an env var marker (e.g. "BYTEPLUS_API_KEY"), resolve from env
-    if (/^[A-Z][A-Z0-9_]+$/u.test(providerApiKey)) {
-      return process.env[providerApiKey]?.trim() || null;
-    }
-    return providerApiKey;
-  }
-
-  return null;
-}
 
 async function fetchImageBuffer(url: string): Promise<{ buffer: Buffer; mimeType: string }> {
   const res = await fetch(url);

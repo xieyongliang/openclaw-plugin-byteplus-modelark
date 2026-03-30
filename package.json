@@ -27,6 +27,7 @@
   "files": [
     "index.ts",
     "models.ts",
+    "auth.ts",
     "seedream-tool.ts",
     "seedance-tool.ts",
     "openclaw.plugin.json",
