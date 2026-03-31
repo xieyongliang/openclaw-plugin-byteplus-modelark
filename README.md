@@ -1,9 +1,12 @@
 # openclaw-plugin-byteplus-modelark
 
-[OpenClaw](https://github.com/openclaw/openclaw) plugin for **BytePlus ARK API** image and video generation.
+[OpenClaw](https://github.com/openclaw/openclaw) plugin for **BytePlus ARK API** — language models, image generation, and video generation.
 
+- **Language models** — Seed 2.0 Pro/Lite, Seed 1.8, Kimi K2.5, GLM 4.7, Ark Code (via providers `byteplus-modelark` / `byteplus-modelark-plan`)
 - **Seedream** — text-to-image generation (models: Seedream 5.0, 4.5, 4.0)
 - **Seedance** — text-to-video and image-to-video generation (models: Seedance 1.5 Pro, 1.0 Pro, 1.0 Lite)
+
+All capabilities share a single `BYTEPLUS_API_KEY`.
 
 ## Installation
 
@@ -22,23 +25,24 @@ openclaw plugins install --link .
 
 ## Configuration
 
-Set your BytePlus API key:
+Set your BytePlus API key before starting OpenClaw:
 
 ```bash
 export BYTEPLUS_API_KEY="your-api-key"
 ```
 
-Or configure via OpenClaw:
+Or run the onboarding wizard after installation (for language models):
 
 ```bash
-openclaw config set models.providers.byteplus.apiKey "your-api-key"
+openclaw onboard
+# Select "BytePlus ModelArk" → "BytePlus ModelArk API key" → enter your key
 ```
 
 Get your API key from the [BytePlus ModelArk Console](https://console.byteplus.com/ark).
 
 ## Usage
 
-Once installed, the plugin registers providers for OpenClaw's `image_generate` and `video_generate` agent tools automatically.
+Once installed and the API key is configured, the plugin registers language model providers and image/video generation tools automatically.
 
 ### Image generation (Seedream)
 
@@ -68,6 +72,26 @@ List all available video generation models
 ```
 
 ## Supported Models
+
+### Language Models
+
+#### `byteplus-modelark` (general)
+
+| Model ID | Name | Input | Context |
+|---|---|---|---|
+| `seed-2-0-pro-260328` | Seed 2.0 Pro (default) | text, image | 256K |
+| `seed-2-0-lite-260228` | Seed 2.0 Lite | text, image | 256K |
+| `seed-1-8-251228` | Seed 1.8 | text, image | 256K |
+| `kimi-k2-5` | Kimi K2.5 | text | 131K |
+| `glm-4-7` | GLM 4.7 | text, image | 128K |
+
+#### `byteplus-modelark-plan` (coding)
+
+| Model ID | Name | Input | Context |
+|---|---|---|---|
+| `ark-code-latest` | Ark Code (Latest) | text | 256K |
+
+Seed models support deep thinking: pass `--thinking high/medium/low` or set `reasoning_effort` via `extraParams`.
 
 ### Seedream (Image)
 
@@ -120,8 +144,8 @@ List all available video generation models
 
 ## Requirements
 
-- [OpenClaw](https://github.com/openclaw/openclaw) >= 2026.3.22 (with core PR [#53681](https://github.com/openclaw/openclaw/pull/53681) merged)
-- A [BytePlus](https://www.byteplus.com/) API key with ARK access
+- [OpenClaw](https://github.com/openclaw/openclaw) >= 2026.3.22
+- A [BytePlus](https://www.byteplus.com/) API key with ARK access (Southeast Asia region)
 
 ## License
 
