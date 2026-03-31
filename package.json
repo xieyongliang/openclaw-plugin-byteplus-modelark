@@ -28,6 +28,8 @@
     "index.ts",
     "models.ts",
     "auth.ts",
+    "llm-models.ts",
+    "llm-provider.ts",
     "seedream-tool.ts",
     "seedance-tool.ts",
     "openclaw.plugin.json",
@@ -50,6 +52,7 @@
     "extensions": [
       "./index.ts"
     ],
+    "providers": ["byteplus-modelark", "byteplus-modelark-plan"],
     "install": {
       "npmSpec": "openclaw-plugin-byteplus-modelark",
       "defaultChoice": "npm"

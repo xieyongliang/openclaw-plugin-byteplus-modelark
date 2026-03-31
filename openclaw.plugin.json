@@ -1,13 +1,14 @@
 {
   "id": "byteplus-modelark",
   "name": "BytePlus ModelArk",
-  "description": "Image generation (Seedream) and video generation (Seedance) via BytePlus ARK API.",
+  "description": "BytePlus ARK API: Seed/Kimi/GLM language models, Seedream image generation, and Seedance video generation.",
   "capabilityTags": ["tools"],
+  "providers": ["byteplus-modelark", "byteplus-modelark-plan"],
   "providerAuthEnvVars": [
     {
       "name": "BYTEPLUS_API_KEY",
       "label": "BytePlus API Key",
-      "description": "BytePlus ARK API key for Seedream image and Seedance video generation."
+      "description": "BytePlus ARK API key — used for language models, image generation, and video generation."
     }
   ],
   "configSchema": {
