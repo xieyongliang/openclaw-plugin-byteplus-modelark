@@ -1,6 +1,6 @@
 {
-  "name": "byteplus-modelark-plugin",
-  "version": "0.1.0",
+  "name": "xieyongliang-byteplus-modelark",
+  "version": "2026.4.1",
   "description": "OpenClaw plugin for BytePlus Seedream image generation and Seedance video generation via ARK API",
   "type": "module",
   "license": "MIT",

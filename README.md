@@ -11,7 +11,7 @@ All capabilities share a single `BYTEPLUS_API_KEY`.
 ## Installation
 
 ```bash
-openclaw plugins install byteplus-modelark-plugin
+openclaw plugins install xieyongliang-byteplus-modelark
 ```
 
 Or link locally for development:
@@ -43,13 +43,13 @@ This writes `models.providers.byteplus-modelark.apiKey` to your config. Both lan
 Store the key directly in plugin config. Image/video tools read this first:
 
 ```bash
-openclaw config set plugins.entries.byteplus-modelark.config.apiKey YOUR_API_KEY
+openclaw config set plugins.entries.@xieyongliang/byteplus-modelark.config.apiKey YOUR_API_KEY
 ```
 
 To override the default API base URL (e.g. for the China region):
 
 ```bash
-openclaw config set plugins.entries.byteplus-modelark.config.baseUrl https://ark.cn-beijing.bytedance.com/api/v3
+openclaw config set plugins.entries.@xieyongliang/byteplus-modelark.config.baseUrl https://ark.cn-beijing.bytedance.com/api/v3
 ```
 
 ### Option C — Environment variable
@@ -64,7 +64,7 @@ export BYTEPLUS_BASE_URL="https://ark.cn-beijing.bytedance.com/api/v3"
 
 For all three capabilities (LLM / Seedream / Seedance), the API key is resolved in this order:
 
-1. `plugins.entries.byteplus-modelark.config.apiKey` (plugin config)
+1. `plugins.entries.@xieyongliang/byteplus-modelark.config.apiKey` (plugin config)
 2. `models.providers.byteplus-modelark.apiKey` (set by `openclaw onboard`)
 3. `BYTEPLUS_API_KEY` environment variable
 

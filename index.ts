@@ -10,7 +10,7 @@ import {
 import { createSeedanceTool } from "./seedance-tool.js";
 import { createSeedreamTool } from "./seedream-tool.js";
 
-const PLUGIN_ID = "byteplus-modelark";
+const PLUGIN_ID = "@xieyongliang/byteplus-modelark";
 const PROVIDER_ID = "byteplus-modelark";
 
 export default definePluginEntry({

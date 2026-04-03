@@ -1,5 +1,5 @@
 {
-  "id": "byteplus-modelark",
+  "id": "@xieyongliang/byteplus-modelark",
   "name": "BytePlus ModelArk",
   "description": "BytePlus ARK API: Seed/Kimi/GLM language models, Seedream image generation, and Seedance video generation.",
   "capabilityTags": ["tools"],

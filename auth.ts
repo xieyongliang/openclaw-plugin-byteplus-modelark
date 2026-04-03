@@ -3,12 +3,12 @@
  * Isolated from network send code to avoid static analysis false positives.
  *
  * Resolution order for API key:
- *   1. plugins.entries.byteplus-modelark.config.apiKey  (openclaw config set)
+ *   1. plugins.entries.@xieyongliang/byteplus-modelark.config.apiKey  (openclaw config set)
  *   2. models.providers.byteplus-modelark.apiKey        (set during LLM onboard)
  *   3. BYTEPLUS_API_KEY environment variable
  *
  * Resolution order for base URL:
- *   1. plugins.entries.byteplus-modelark.config.baseUrl
+ *   1. plugins.entries.@xieyongliang/byteplus-modelark.config.baseUrl
  *   2. models.providers.byteplus-modelark.baseUrl
  *   3. BYTEPLUS_BASE_URL environment variable
  *   4. Default Southeast Asia endpoint
@@ -16,7 +16,7 @@
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk/plugin-entry";
 import { BYTEPLUS_PROVIDER_ID } from "./models.js";
 
-const PLUGIN_ID = "byteplus-modelark";
+const PLUGIN_ID = "@xieyongliang/byteplus-modelark";
 const DEFAULT_ARK_BASE_URL = "https://ark.ap-southeast.bytepluses.com/api/v3";
 type PluginEntryConfig = { apiKey?: unknown; baseUrl?: string } | undefined;
 
