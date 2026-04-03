@@ -44,6 +44,32 @@ Get your API key from the [BytePlus ModelArk Console](https://console.byteplus.c
 
 Once installed and the API key is configured, the plugin registers language model providers and image/video generation tools automatically.
 
+### Language models (Seed / Kimi / GLM)
+
+Use `byteplus-modelark` as your model provider in OpenClaw:
+
+```
+What is the capital of France?
+```
+
+```
+Review this code and suggest improvements
+```
+
+Enable deep thinking for complex reasoning (Seed models only):
+
+```
+--thinking high: Solve this math problem step by step: ...
+--thinking medium: Analyze the pros and cons of microservices architecture
+```
+
+Switch models explicitly:
+
+```
+Using seed-2-0-lite, summarize this article in 3 bullet points
+Using kimi-k2-5, translate this document to Chinese
+```
+
 ### Image generation (Seedream)
 
 ```

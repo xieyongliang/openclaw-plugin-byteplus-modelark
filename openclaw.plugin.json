@@ -4,16 +4,33 @@
   "description": "BytePlus ARK API: Seed/Kimi/GLM language models, Seedream image generation, and Seedance video generation.",
   "capabilityTags": ["tools"],
   "providers": ["byteplus-modelark", "byteplus-modelark-plan"],
-  "providerAuthEnvVars": [
-    {
-      "name": "BYTEPLUS_API_KEY",
-      "label": "BytePlus API Key",
-      "description": "BytePlus ARK API key — used for language models, image generation, and video generation."
+  "providerAuthEnvVars": {
+    "byteplus-modelark": ["BYTEPLUS_API_KEY"]
+  },
+  "uiHints": {
+    "apiKey": {
+      "label": "BytePlus ARK API Key",
+      "help": "API key for BytePlus ARK (language models, Seedream image generation, Seedance video generation). Get your key from https://console.byteplus.com/ark",
+      "sensitive": true,
+      "placeholder": "your-byteplus-ark-api-key"
+    },
+    "baseUrl": {
+      "label": "BytePlus ARK Base URL",
+      "help": "Override the default ARK API base URL (default: https://ark.ap-southeast.bytepluses.com/api/v3). Use for China region."
     }
-  ],
+  },
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
-    "properties": {}
+    "properties": {
+      "apiKey": {
+        "type": ["string", "object"],
+        "description": "BytePlus ARK API key. Fallback: BYTEPLUS_API_KEY env var."
+      },
+      "baseUrl": {
+        "type": "string",
+        "description": "BytePlus ARK API base URL override."
+      }
+    }
   }
 }

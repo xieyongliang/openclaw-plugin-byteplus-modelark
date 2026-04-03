@@ -3,10 +3,9 @@ import OpenAI from "openai";
 import { jsonResult, readNumberParam, readStringParam } from "openclaw/plugin-sdk/agent-runtime";
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk/plugin-entry";
 import { saveMediaBuffer } from "openclaw/plugin-sdk/media-runtime";
-import { resolveApiKey } from "./auth.js";
+import { resolveApiKey, resolveBaseUrl } from "./auth.js";
 import { SEEDANCE_DEFAULT_MODEL } from "./models.js";
 
-const DEFAULT_BASE_URL = "https://ark.ap-southeast.bytepluses.com/api/v3";
 const DEFAULT_POLL_INTERVAL_MS = 3_000;
 const DEFAULT_MAX_WAIT_MS = 600_000;
 // Video files can be significantly larger than the default 16 MB limit
@@ -69,11 +68,7 @@ const SeedanceToolSchema = Type.Object(
   { additionalProperties: false },
 );
 
-function resolveBaseUrl(api: OpenClawPluginApi): string {
-  const direct =
-    api.config?.models?.providers?.[BYTEPLUS_PROVIDER_ID]?.baseUrl?.trim();
-  return (direct || DEFAULT_BASE_URL).replace(/\/+$/u, "");
-}
+
 
 
 type ContentGenerationTaskID = { id: string };
