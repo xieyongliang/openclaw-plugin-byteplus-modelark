@@ -11,7 +11,7 @@ All capabilities share a single `BYTEPLUS_API_KEY`.
 ## Installation
 
 ```bash
-openclaw plugins install openclaw-plugin-byteplus-modelark
+openclaw plugins install byteplus-modelark-plugin
 ```
 
 Or link locally for development:
@@ -25,20 +25,48 @@ openclaw plugins install --link .
 
 ## Configuration
 
-Set your BytePlus API key before starting OpenClaw:
+Get your API key from the [BytePlus ModelArk Console](https://console.byteplus.com/ark).
 
-```bash
-export BYTEPLUS_API_KEY="your-api-key"
-```
+### Option A — Onboard wizard (recommended for language models)
 
-Or run the onboarding wizard after installation (for language models):
+After installation, run the onboarding wizard. It prompts for the API key and sets the default model:
 
 ```bash
 openclaw onboard
-# Select "BytePlus ModelArk" → "BytePlus ModelArk API key" → enter your key
+# → Select "BytePlus ModelArk" → enter your BytePlus ARK API key
 ```
 
-Get your API key from the [BytePlus ModelArk Console](https://console.byteplus.com/ark).
+This writes `models.providers.byteplus-modelark.apiKey` to your config. Both language models **and** the Seedream/Seedance tools will use this key automatically.
+
+### Option B — Plugin config (applies to all capabilities)
+
+Store the key directly in plugin config. Image/video tools read this first:
+
+```bash
+openclaw config set plugins.entries.byteplus-modelark.config.apiKey YOUR_API_KEY
+```
+
+To override the default API base URL (e.g. for the China region):
+
+```bash
+openclaw config set plugins.entries.byteplus-modelark.config.baseUrl https://ark.cn-beijing.bytedance.com/api/v3
+```
+
+### Option C — Environment variable
+
+```bash
+export BYTEPLUS_API_KEY="your-api-key"
+# Optional: override base URL
+export BYTEPLUS_BASE_URL="https://ark.cn-beijing.bytedance.com/api/v3"
+```
+
+### Resolution order
+
+For all three capabilities (LLM / Seedream / Seedance), the API key is resolved in this order:
+
+1. `plugins.entries.byteplus-modelark.config.apiKey` (plugin config)
+2. `models.providers.byteplus-modelark.apiKey` (set by `openclaw onboard`)
+3. `BYTEPLUS_API_KEY` environment variable
 
 ## Usage
 
