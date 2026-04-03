@@ -1,5 +1,5 @@
 {
-  "name": "openclaw-plugin-byteplus-modelark",
+  "name": "byteplus-modelark-plugin",
   "version": "0.1.0",
   "description": "OpenClaw plugin for BytePlus Seedream image generation and Seedance video generation via ARK API",
   "type": "module",
@@ -52,9 +52,12 @@
     "extensions": [
       "./index.ts"
     ],
-    "providers": ["byteplus-modelark", "byteplus-modelark-plan"],
+    "providers": [
+      "byteplus-modelark",
+      "byteplus-modelark-plan"
+    ],
     "install": {
-      "npmSpec": "openclaw-plugin-byteplus-modelark",
+      "npmSpec": "byteplus-modelark-plugin",
       "defaultChoice": "npm"
     },
     "compat": {
