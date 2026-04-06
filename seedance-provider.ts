@@ -6,7 +6,7 @@ import type {
   VideoGenerationResult,
 } from "openclaw/plugin-sdk/video-generation";
 import { resolveApiKey, resolveBaseUrl } from "./auth.js";
-import { SEEDANCE_DEFAULT_MODEL } from "./models.js";
+import { SEEDANCE_1_0_DEFAULT_MODEL } from "./models.js";
 
 const DEFAULT_POLL_INTERVAL_MS = 3_000;
 const DEFAULT_MAX_WAIT_MS = 600_000;
@@ -149,7 +149,7 @@ export function buildSeedanceVideoProvider(api: OpenClawPluginApi): VideoGenerat
   return {
     id: "byteplus",
     label: "BytePlus Seedance",
-    defaultModel: SEEDANCE_DEFAULT_MODEL,
+    defaultModel: SEEDANCE_1_0_DEFAULT_MODEL,
     models: [...SEEDANCE_MODELS],
     capabilities: {
       supportsAspectRatio: true,

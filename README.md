@@ -190,7 +190,8 @@ Videos are generated asynchronously. The agent queues the task and delivers the 
 | `byteplus/seedance-1-5-pro-251215` | `byteplus-seedance15` | T2V + I2V | **2** (first + last frame) | — | — |
 | `byteplus/dreamina-seedance-2-0-260128` | `byteplus-seedance2` | T2V + I2V | **9** | **3** | **3** |
 | `byteplus/dreamina-seedance-2-0-fast-260128` | `byteplus-seedance2` | T2V + I2V | **9** | **3** | **3** |
-| `byteplus/seedance-1-0-pro-250528` | `byteplus` | T2V + I2V | **2** (first + last frame) | — | — |
+| `byteplus/seedance-1-0-pro-250528` *(default)* | `byteplus` | T2V + I2V | **2** (first + last frame) | — | — |
+| `byteplus/seedance-1-0-pro-t2v-250528` | `byteplus` | T2V only | — | — | — |
 | `byteplus/seedance-1-0-pro-fast-251015` | `byteplus` | T2V + I2V | **2** (first + last frame) | — | — |
 | `byteplus/seedance-1-0-lite-t2v-250428` | `byteplus` | T2V only | — | — | — |
 | `byteplus/seedance-1-0-lite-i2v-250428` | `byteplus` | I2V only | **2** (first + last frame) | — | — |
