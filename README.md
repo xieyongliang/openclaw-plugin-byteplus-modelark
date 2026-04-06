@@ -185,15 +185,15 @@ Videos are generated asynchronously. The agent queues the task and delivers the 
 
 ### Supported models
 
-| Model ID | Type | Notes |
-|---|---|---|
-| `byteplus/seedance-1-5-pro-251215` | T2V + I2V | Default; best quality |
-| `byteplus/dreamina-seedance-2-0-260128` | T2V + I2V | Seedance 2.0 |
-| `byteplus/dreamina-seedance-2-0-fast-260128` | T2V + I2V | Seedance 2.0 Fast |
-| `byteplus/seedance-1-0-pro-250528` | T2V + I2V | 1.0 Pro |
-| `byteplus/seedance-1-0-pro-fast-251015` | T2V + I2V | 1.0 Pro Fast |
-| `byteplus/seedance-1-0-lite-t2v-250428` | T2V only | Lite text-to-video |
-| `byteplus/seedance-1-0-lite-i2v-250428` | I2V only | Lite image-to-video |
+| Model ID | Provider ID | Type | Max images | Max videos | Max audios |
+|---|---|---|---|---|---|
+| `byteplus/seedance-1-5-pro-251215` | `byteplus-seedance15` | T2V + I2V | **2** (first + last frame) | — | — |
+| `byteplus/dreamina-seedance-2-0-260128` | `byteplus-seedance2` | T2V + I2V | **9** | **3** | **3** |
+| `byteplus/dreamina-seedance-2-0-fast-260128` | `byteplus-seedance2` | T2V + I2V | **9** | **3** | **3** |
+| `byteplus/seedance-1-0-pro-250528` | `byteplus` | T2V + I2V | **2** (first + last frame) | — | — |
+| `byteplus/seedance-1-0-pro-fast-251015` | `byteplus` | T2V + I2V | **2** (first + last frame) | — | — |
+| `byteplus/seedance-1-0-lite-t2v-250428` | `byteplus` | T2V only | — | — | — |
+| `byteplus/seedance-1-0-lite-i2v-250428` | `byteplus` | I2V only | **2** (first + last frame) | — | — |
 
 ### Set default video model
 
@@ -255,9 +255,9 @@ Make a 10 second 1080p timelapse of a city at night with no watermark, seed 42
 Generate a 5 second video of a spinning galaxy, use providerOptions: {"seed": 123, "camerafixed": true}
 ```
 
-### Image-to-video (I2V) — Seedance 1.5 Pro and 2.0
+### Image-to-video (I2V) — Seedance 1.5 Pro
 
-For Seedance 1.5 Pro and 2.0, use `images` + `imageRoles` to set first/last frame:
+Seedance 1.5 Pro supports **at most 2 input images**: first_frame and last_frame.
 
 **In conversation:**
 
@@ -269,17 +269,19 @@ Generate a video starting from [attach image], mark it as first_frame, 5 seconds
 Generate a video transitioning from [image A] to [image B] — first image is first_frame, second is last_frame
 ```
 
-**Command line (with local images):**
+### Image-to-video and multi-reference — Seedance 2.0
 
-```bash
-openclaw agent \
-  --message "Generate a 5 second I2V video, attach sunrise.jpg as first_frame, 720p 16:9" \
-  --attachment sunrise.jpg
+Seedance 2.0 supports up to **9 reference images**, **3 reference videos**, and **3 reference audios**.
+
+**In conversation:**
+
+```
+Generate a 5 second video using dreamina-seedance-2-0-260128, with these 3 reference images [attach]
 ```
 
 ### Image-to-video (I2V) — Seedance 1.0 models
 
-For Seedance 1.0 models, pass image URLs via `providerOptions`:
+Seedance 1.0 models support **at most 2 input images** (first_frame + last_frame) via `providerOptions`:
 
 ```
 Generate a 5 second video using seedance-1-0-pro-250528, providerOptions: {

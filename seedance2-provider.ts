@@ -11,18 +11,16 @@ import { resolveApiKey, resolveBaseUrl } from "./auth.js";
 const DEFAULT_POLL_INTERVAL_MS = 3_000;
 const DEFAULT_MAX_WAIT_MS = 600_000;
 
-// Models using the unified content[] API with top-level fields (ratio, duration, watermark).
-// Seedance 1.0 models also use content[] but embed params inline in the text prompt instead.
-const SEEDANCE_CONTENT_API_MODELS = [
-  // Seedance 1.5 Pro
-  "seedance-1-5-pro-251215",
-  // Seedance 2.0
+// Seedance 1.5 Pro: unified content[] API, max 2 input images (first_frame + last_frame only).
+const SEEDANCE15_MODELS = ["seedance-1-5-pro-251215"] as const;
+const SEEDANCE15_DEFAULT_MODEL = "seedance-1-5-pro-251215";
+
+// Seedance 2.0: unified content[] API, up to 9 reference images, 3 videos, 3 audios.
+const SEEDANCE2_MODELS = [
   "dreamina-seedance-2-0-260128",
-  // Seedance 2.0 Fast
   "dreamina-seedance-2-0-fast-260128",
 ] as const;
-
-const SEEDANCE2_DEFAULT_MODEL = "seedance-1-5-pro-251215";
+const SEEDANCE2_DEFAULT_MODEL = "dreamina-seedance-2-0-260128";
 
 type ContentGenerationTaskID = { id: string };
 type ContentGenerationTask = {
@@ -175,16 +173,100 @@ async function downloadVideoBuffer(url: string): Promise<Buffer> {
   return Buffer.from(await res.arrayBuffer());
 }
 
+/** Shared generate logic used by both the 1.5 Pro and 2.0 providers. */
+async function generateVideoInternal(
+  req: VideoGenerationRequest,
+  api: OpenClawPluginApi,
+): Promise<VideoGenerationResult> {
+  const apiKey = resolveApiKey(api);
+  if (!apiKey) {
+    throw new Error(
+      "BytePlus API key not configured. Set BYTEPLUS_API_KEY before starting OpenClaw.",
+    );
+  }
+
+  const opts = req.providerOptions ?? {};
+  const seed = typeof opts.seed === "number" ? opts.seed : undefined;
+
+  const firstFrameUrl = typeof opts.firstFrameImageUrl === "string"
+    ? opts.firstFrameImageUrl
+    : undefined;
+  const lastFrameUrl = typeof opts.lastFrameImageUrl === "string"
+    ? opts.lastFrameImageUrl
+    : undefined;
+
+  const hasRoledImages = (req.inputImages ?? []).some((img) => Boolean(img.role));
+  const positionalFrameMode = !hasRoledImages && !firstFrameUrl && !lastFrameUrl;
+
+  const content = buildContent({
+    prompt: req.prompt,
+    inputImages: req.inputImages,
+    inputVideos: req.inputVideos,
+    inputAudios: req.inputAudios,
+    firstFrameUrl,
+    lastFrameUrl,
+    positionalFrameMode,
+  });
+
+  const client = new OpenAI({ apiKey, baseURL: resolveBaseUrl(api) });
+
+  const taskId = await createTask(client, {
+    model: req.model,
+    content,
+    aspectRatio: req.aspectRatio ?? "16:9",
+    durationSeconds: req.durationSeconds,
+    generateAudio: req.audio ?? false,
+    watermark: req.watermark ?? false,
+    seed,
+  });
+
+  const videoUrl = await pollTask(client, taskId, DEFAULT_MAX_WAIT_MS);
+  const buffer = await downloadVideoBuffer(videoUrl);
+
+  return {
+    videos: [{ buffer, mimeType: "video/mp4", fileName: `seedance2-${taskId}.mp4` }],
+    model: req.model,
+    metadata: { taskId },
+  };
+}
+
+/**
+ * Seedance 1.5 Pro provider.
+ * Supports at most 2 input images (first_frame + last_frame only).
+ * No video or audio reference inputs.
+ */
+export function buildSeedance15VideoProvider(api: OpenClawPluginApi): VideoGenerationProvider {
+  return {
+    id: "byteplus-seedance15",
+    label: "BytePlus Seedance 1.5 Pro",
+    defaultModel: SEEDANCE15_DEFAULT_MODEL,
+    models: [...SEEDANCE15_MODELS],
+    capabilities: {
+      supportsAspectRatio: true,
+      supportsAudio: true,
+      supportsWatermark: true,
+      // 1.5 Pro accepts at most 2 images: first_frame and last_frame.
+      maxInputImages: 2,
+      supportedDurationSeconds: [3, 4, 5, 6, 7, 8, 9, 10, 11],
+    },
+    isConfigured: () => Boolean(resolveApiKey(api)),
+    generateVideo: (req: VideoGenerationRequest) => generateVideoInternal(req, api),
+  };
+}
+
+/**
+ * Seedance 2.0 provider.
+ * Supports up to 9 reference images, 3 reference videos, and 3 reference audios.
+ */
 export function buildSeedance2VideoProvider(api: OpenClawPluginApi): VideoGenerationProvider {
   return {
     id: "byteplus-seedance2",
-    label: "BytePlus Seedance (1.5 Pro / 2.0)",
+    label: "BytePlus Seedance 2.0",
     defaultModel: SEEDANCE2_DEFAULT_MODEL,
-    models: [...SEEDANCE_CONTENT_API_MODELS],
+    models: [...SEEDANCE2_MODELS],
     capabilities: {
-      // Supports "adaptive" in addition to standard aspect ratio strings; core passes it as-is.
       supportsAspectRatio: true,
-      supportsAudio: true,      // generate_audio
+      supportsAudio: true,
       supportsWatermark: true,
       maxInputImages: 9,
       maxInputVideos: 3,
@@ -192,62 +274,7 @@ export function buildSeedance2VideoProvider(api: OpenClawPluginApi): VideoGenera
       supportedDurationSeconds: [3, 4, 5, 6, 7, 8, 9, 10, 11],
     },
     isConfigured: () => Boolean(resolveApiKey(api)),
-    generateVideo: async (req: VideoGenerationRequest): Promise<VideoGenerationResult> => {
-      const apiKey = resolveApiKey(api);
-      if (!apiKey) {
-        throw new Error(
-          "BytePlus API key not configured. Set BYTEPLUS_API_KEY before starting OpenClaw.",
-        );
-      }
-
-      const opts = req.providerOptions ?? {};
-      const seed = typeof opts.seed === "number" ? opts.seed : undefined;
-
-      // providerOptions frame URL overrides (compat with Seedance 1.x plugin users).
-      const firstFrameUrl = typeof opts.firstFrameImageUrl === "string"
-        ? opts.firstFrameImageUrl
-        : undefined;
-      const lastFrameUrl = typeof opts.lastFrameImageUrl === "string"
-        ? opts.lastFrameImageUrl
-        : undefined;
-
-      // Positional frame mode: when images have no explicit role and no providerOptions
-      // frame URLs are set, treat images[0]/images[1] as first_frame/last_frame.
-      // This matches the natural usage pattern for Seedance 1.5 Pro first/last frame.
-      const hasRoledImages = (req.inputImages ?? []).some((img) => Boolean(img.role));
-      const positionalFrameMode = !hasRoledImages && !firstFrameUrl && !lastFrameUrl;
-
-      const content = buildContent({
-        prompt: req.prompt,
-        inputImages: req.inputImages,
-        inputVideos: req.inputVideos,
-        inputAudios: req.inputAudios,
-        firstFrameUrl,
-        lastFrameUrl,
-        positionalFrameMode,
-      });
-
-      const client = new OpenAI({ apiKey, baseURL: resolveBaseUrl(api) });
-
-      const taskId = await createTask(client, {
-        model: req.model,
-        content,
-        // "adaptive" is a valid Seedance ratio that auto-detects from the input image dimensions.
-        aspectRatio: req.aspectRatio ?? "16:9",
-        durationSeconds: req.durationSeconds,
-        generateAudio: req.audio ?? false,
-        watermark: req.watermark ?? false,
-        seed,
-      });
-
-      const videoUrl = await pollTask(client, taskId, DEFAULT_MAX_WAIT_MS);
-      const buffer = await downloadVideoBuffer(videoUrl);
-
-      return {
-        videos: [{ buffer, mimeType: "video/mp4", fileName: `seedance2-${taskId}.mp4` }],
-        model: req.model,
-        metadata: { taskId },
-      };
-    },
+    generateVideo: (req: VideoGenerationRequest) => generateVideoInternal(req, api),
   };
 }
+
