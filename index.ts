@@ -7,7 +7,8 @@ import {
   BYTEPLUS_LLM_DEFAULT_MODEL_REF,
   REASONING_MODEL_IDS,
 } from "./llm-models.js";
-import { createSeedanceTool } from "./seedance-tool.js";
+import { buildSeedanceVideoProvider } from "./seedance-provider.js";
+import { buildSeedance2VideoProvider } from "./seedance2-provider.js";
 import { createSeedreamTool } from "./seedream-tool.js";
 
 const PLUGIN_ID = "@xieyongliang/byteplus-modelark";
@@ -107,8 +108,15 @@ export default definePluginEntry({
       },
     });
 
-    // ── Image & Video Tools ───────────────────────────────────────────────────
+    // ── Image Tool ────────────────────────────────────────────────────────────
     api.registerTool(createSeedreamTool(api) as AnyAgentTool);
-    api.registerTool(createSeedanceTool(api) as AnyAgentTool);
+
+    // ── Video Generation Providers ────────────────────────────────────────────
+    // Seedance 1.x: provider id "byteplus". Supports first/last frame via role or providerOptions.
+    api.registerVideoGenerationProvider(buildSeedanceVideoProvider(api));
+    // Seedance 1.5 Pro + 2.0: provider id "byteplus-seedance2". Unified content[] API.
+    // Supports first_frame/last_frame roles natively, up to 9 images, 3 videos, 3 audios.
+    // aspectRatio "adaptive" auto-detects ratio from input image dimensions.
+    api.registerVideoGenerationProvider(buildSeedance2VideoProvider(api));
   },
 });

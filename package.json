@@ -1,7 +1,7 @@
 {
   "name": "xieyongliang-byteplus-modelark",
-  "version": "2026.4.1",
-  "description": "OpenClaw plugin for BytePlus Seedream image generation and Seedance video generation via ARK API",
+  "version": "2026.4.6",
+  "description": "OpenClaw plugin for BytePlus ARK API — Seed/Kimi/GLM language models, Seedream image generation, and Seedance video generation",
   "type": "module",
   "license": "MIT",
   "author": "ByteDance",
@@ -32,6 +32,8 @@
     "llm-provider.ts",
     "seedream-tool.ts",
     "seedance-tool.ts",
+    "seedance-provider.ts",
+    "seedance2-provider.ts",
     "openclaw.plugin.json",
     "README.md",
     "LICENSE"
@@ -41,7 +43,7 @@
     "openai": "^6.32.0"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.3.22"
+    "openclaw": ">=2026.4.6"
   },
   "peerDependenciesMeta": {
     "openclaw": {
@@ -57,7 +59,7 @@
       "byteplus-modelark-plan"
     ],
     "install": {
-      "npmSpec": "byteplus-modelark-plugin",
+      "npmSpec": "xieyongliang-byteplus-modelark",
       "defaultChoice": "npm"
     },
     "compat": {
@@ -66,5 +68,8 @@
     "build": {
       "openclawVersion": "2026.3.24"
     }
+  },
+  "devDependencies": {
+    "openclaw": "file:../openclaw"
   }
 }
