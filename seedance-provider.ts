@@ -28,61 +28,22 @@ type ContentGenerationTask = {
   error?: { message?: string; code?: string };
 };
 
-/**
- * Build the inline parameter suffix for Seedance 1.0 models.
- * All control params are embedded in the text prompt string, e.g.:
- *   "--ratio 16:9  --resolution 720p  --duration 5  --camerafixed false  --watermark true"
- *
- * Note: for I2V models, --ratio is omitted when not explicitly requested (the API infers
- * the ratio from the input image dimensions in that case).
- */
-function buildInlineParams(params: {
-  aspectRatio?: string;
-  resolution: string;
-  durationSeconds?: number;
-  camerafixed?: boolean;
-  watermark: boolean;
-  draft: boolean;
-}): string {
-  const parts: string[] = [];
-  // Only include --ratio when explicitly set (T2V always sets it; I2V may omit it).
-  if (params.aspectRatio) parts.push(`--ratio ${params.aspectRatio}`);
-  const resolution = params.draft ? "480p" : params.resolution;
-  parts.push(`--resolution ${resolution}`);
-  if (params.durationSeconds != null) parts.push(`--duration ${params.durationSeconds}`);
-  if (params.camerafixed != null) parts.push(`--camerafixed ${params.camerafixed}`);
-  parts.push(`--watermark ${params.watermark}`);
-  return parts.join("  ");
-}
-
 async function createSeedanceTask(
   client: OpenAI,
   params: {
     model: string;
     prompt: string;
-    durationSeconds?: number;
-    aspectRatio: string;
+    aspectRatio?: string;
     resolution: string;
+    durationSeconds?: number;
     seed?: number;
     watermark: boolean;
+    cameraFixed?: boolean;
     firstFrameImageUrl?: string;
     lastFrameImageUrl?: string;
-    camerafixed?: boolean;
-    draft: boolean;
   },
 ): Promise<string> {
-  // Seedance 1.0 embeds control params as inline text flags; append them to the prompt.
-  const inlineParams = buildInlineParams({
-    aspectRatio: params.aspectRatio,
-    resolution: params.resolution,
-    durationSeconds: params.durationSeconds,
-    camerafixed: params.camerafixed,
-    watermark: params.watermark,
-    draft: params.draft,
-  });
-  const textWithParams = `${params.prompt}  ${inlineParams}`;
-
-  const content: Array<Record<string, unknown>> = [{ type: "text", text: textWithParams }];
+  const content: Array<Record<string, unknown>> = [{ type: "text", text: params.prompt }];
 
   if (params.firstFrameImageUrl) {
     content.push({
@@ -99,13 +60,18 @@ async function createSeedanceTask(
     });
   }
 
+  // All control params are JSON body fields. The Seedance API requires lowercase resolution
+  // values ("480p", "720p") — uppercase variants are rejected with InvalidParameter.
   const body: Record<string, unknown> = {
     model: params.model,
     content,
+    resolution: params.resolution,
+    watermark: params.watermark,
   };
-
-  // seed is the only remaining top-level field for Seedance 1.0.
+  if (params.aspectRatio) body.ratio = params.aspectRatio;
+  if (params.durationSeconds != null) body.duration = Math.round(params.durationSeconds);
   if (params.seed != null) body.seed = params.seed;
+  if (params.cameraFixed != null) body.camera_fixed = params.cameraFixed;
 
   const result = await client.post<ContentGenerationTaskID>("/contents/generations/tasks", {
     body,
@@ -217,15 +183,14 @@ export function buildSeedanceVideoProvider(api: OpenClawPluginApi): VideoGenerat
       const taskId = await createSeedanceTask(client, {
         model: req.model,
         prompt: req.prompt,
-        durationSeconds: req.durationSeconds,
         aspectRatio,
         resolution,
+        durationSeconds: req.durationSeconds,
         seed,
         watermark: req.watermark ?? false,
+        cameraFixed: camerafixed,
         firstFrameImageUrl,
         lastFrameImageUrl,
-        camerafixed,
-        draft,
       });
 
       // Return the pre-signed TOS URL directly instead of downloading the file.

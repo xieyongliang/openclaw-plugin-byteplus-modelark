@@ -114,6 +114,8 @@ async function createTask(
     model: string;
     content: Array<Record<string, unknown>>;
     aspectRatio: string;
+    /** Lowercase resolution value e.g. "720p". Seedance API rejects uppercase variants. */
+    resolution: string;
     durationSeconds?: number;
     generateAudio: boolean;
     watermark: boolean;
@@ -126,6 +128,7 @@ async function createTask(
     model: params.model,
     content: params.content,
     ratio: params.aspectRatio,
+    resolution: params.resolution,
     generate_audio: params.generateAudio,
     watermark: params.watermark,
   };
@@ -219,10 +222,14 @@ async function generateVideoInternal(
 
   const client = new OpenAI({ apiKey, baseURL: resolveBaseUrl(api) });
 
+  // Seedance API requires lowercase resolution values; uppercase triggers InvalidParameter.
+  const resolution = req.resolution?.toLowerCase() ?? "720p";
+
   const taskId = await createTask(client, {
     model: req.model,
     content,
     aspectRatio: req.aspectRatio ?? "16:9",
+    resolution,
     durationSeconds: req.durationSeconds,
     generateAudio: req.audio ?? false,
     watermark: req.watermark ?? false,
