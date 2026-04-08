@@ -118,6 +118,7 @@ async function createTask(
     generateAudio: boolean;
     watermark: boolean;
     seed?: number;
+    /** Only supported by Seedance 1.5 Pro; must not be sent for Seedance 2.0 models. */
     camera_fixed?: boolean;
   },
 ): Promise<string> {
@@ -131,13 +132,14 @@ async function createTask(
 
   if (params.durationSeconds != null) body.duration = params.durationSeconds;
   if (params.seed != null) body.seed = params.seed;
+  // camera_fixed is only forwarded when explicitly provided (caller skips it for 2.0 models).
   if (params.camera_fixed != null) body.camera_fixed = params.camera_fixed;
 
   const result = await client.post<ContentGenerationTaskID>("/contents/generations/tasks", {
     body,
   });
 
-  if (!result.id) throw new Error("Seedance 2.0 task creation returned no task ID");
+  if (!result.id) throw new Error("Task creation returned no task ID");
   return result.id;
 }
 
@@ -166,19 +168,19 @@ async function pollTask(client: OpenAI, taskId: string, maxWaitMs: number): Prom
   );
 }
 
-async function downloadVideoBuffer(url: string): Promise<Buffer> {
-  const res = await fetch(url);
-  if (!res.ok) {
-    const msg = await res.text().catch(() => "");
-    throw new Error(`Seedance 2.0 video download failed (${res.status}): ${msg || res.statusText}`);
-  }
-  return Buffer.from(await res.arrayBuffer());
-}
+/**
+ * Per-model feature flags.
+ * Seedance 1.5 Pro supports camera_fixed and draft; Seedance 2.0 does not.
+ */
+type ModelFeatures = {
+  supportsCameraFixed: boolean;
+};
 
 /** Shared generate logic used by both the 1.5 Pro and 2.0 providers. */
 async function generateVideoInternal(
   req: VideoGenerationRequest,
   api: OpenClawPluginApi,
+  features: ModelFeatures,
 ): Promise<VideoGenerationResult> {
   const apiKey = resolveApiKey(api);
   if (!apiKey) {
@@ -189,7 +191,11 @@ async function generateVideoInternal(
 
   const opts = req.providerOptions ?? {};
   const seed = typeof opts.seed === "number" ? opts.seed : undefined;
-  const cameraFixed = typeof opts.camera_fixed === "boolean" ? opts.camera_fixed : undefined;
+  // camera_fixed is only supported by Seedance 1.5 Pro (not 2.0).
+  const cameraFixed =
+    features.supportsCameraFixed && typeof opts.camera_fixed === "boolean"
+      ? opts.camera_fixed
+      : undefined;
 
   const firstFrameUrl = typeof opts.firstFrameImageUrl === "string"
     ? opts.firstFrameImageUrl
@@ -224,11 +230,12 @@ async function generateVideoInternal(
     camera_fixed: cameraFixed,
   });
 
+  // Return the pre-signed URL directly (avoids downloading potentially large video files).
+  // Callers that need the bytes can download via the URL field.
   const videoUrl = await pollTask(client, taskId, DEFAULT_MAX_WAIT_MS);
-  const buffer = await downloadVideoBuffer(videoUrl);
 
   return {
-    videos: [{ buffer, mimeType: "video/mp4", fileName: `seedance2-${taskId}.mp4` }],
+    videos: [{ url: videoUrl, mimeType: "video/mp4", fileName: `seedance2-${taskId}.mp4` }],
     model: req.model,
     metadata: { taskId },
   };
@@ -260,7 +267,8 @@ export function buildSeedance15VideoProvider(api: OpenClawPluginApi): VideoGener
       supportedDurationSeconds: [4, 5, 6, 7, 8, 9, 10, 11, 12],
     },
     isConfigured: () => Boolean(resolveApiKey(api)),
-    generateVideo: (req: VideoGenerationRequest) => generateVideoInternal(req, api),
+    generateVideo: (req: VideoGenerationRequest) =>
+      generateVideoInternal(req, api, { supportsCameraFixed: true }),
   };
 }
 
@@ -284,17 +292,26 @@ export function buildSeedance2VideoProvider(api: OpenClawPluginApi): VideoGenera
     capabilities: {
       providerOptions: {
         seed: "number",
+        // camera_fixed and draft are NOT supported by Seedance 2.0.
       },
       supportsAspectRatio: true,
       supportsAudio: true,
       supportsWatermark: true,
+      // Up to 9 reference images, 3 reference videos, 3 reference audios.
+      // Note: first_frame/last_frame and multimodal reference are mutually exclusive.
       maxInputImages: 9,
       maxInputVideos: 3,
       maxInputAudios: 3,
-      supportedDurationSeconds: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      // Internal docs: duration [4, 15] seconds or -1 (auto). Default: 5.
+      // Resolution: 480p/720p only (no 1080p support).
+      supportedDurationSeconds: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
     },
     isConfigured: () => Boolean(resolveApiKey(api)),
     generateVideo: (_req: VideoGenerationRequest): Promise<VideoGenerationResult> => {
+      // Seedance 2.0 is not yet accessible via the BytePlus ModelArk public API.
+      // Implementation is kept conflict-free for future enablement.
+      // When API access becomes available, replace this guard with:
+      //   return generateVideoInternal(req, api, { supportsCameraFixed: false });
       throw new Error(
         "Seedance 2.0 is not yet available via the BytePlus ModelArk public API. " +
           "See https://docs.byteplus.com/en/docs/ModelArk/1366799 for updates.",
