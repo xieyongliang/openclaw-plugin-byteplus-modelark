@@ -118,6 +118,7 @@ async function createTask(
     generateAudio: boolean;
     watermark: boolean;
     seed?: number;
+    camera_fixed?: boolean;
   },
 ): Promise<string> {
   const body: Record<string, unknown> = {
@@ -130,6 +131,7 @@ async function createTask(
 
   if (params.durationSeconds != null) body.duration = params.durationSeconds;
   if (params.seed != null) body.seed = params.seed;
+  if (params.camera_fixed != null) body.camera_fixed = params.camera_fixed;
 
   const result = await client.post<ContentGenerationTaskID>("/contents/generations/tasks", {
     body,
@@ -187,6 +189,7 @@ async function generateVideoInternal(
 
   const opts = req.providerOptions ?? {};
   const seed = typeof opts.seed === "number" ? opts.seed : undefined;
+  const cameraFixed = typeof opts.camera_fixed === "boolean" ? opts.camera_fixed : undefined;
 
   const firstFrameUrl = typeof opts.firstFrameImageUrl === "string"
     ? opts.firstFrameImageUrl
@@ -218,6 +221,7 @@ async function generateVideoInternal(
     generateAudio: req.audio ?? false,
     watermark: req.watermark ?? false,
     seed,
+    camera_fixed: cameraFixed,
   });
 
   const videoUrl = await pollTask(client, taskId, DEFAULT_MAX_WAIT_MS);
@@ -234,6 +238,7 @@ async function generateVideoInternal(
  * Seedance 1.5 Pro provider.
  * Supports at most 2 input images (first_frame + last_frame only).
  * No video or audio reference inputs.
+ * Supported duration: 4–12 s (per official docs).
  */
 export function buildSeedance15VideoProvider(api: OpenClawPluginApi): VideoGenerationProvider {
   return {
@@ -244,13 +249,15 @@ export function buildSeedance15VideoProvider(api: OpenClawPluginApi): VideoGener
     capabilities: {
       providerOptions: {
         seed: "number",
+        camera_fixed: "boolean",
       },
       supportsAspectRatio: true,
       supportsAudio: true,
       supportsWatermark: true,
       // 1.5 Pro accepts at most 2 images: first_frame and last_frame.
       maxInputImages: 2,
-      supportedDurationSeconds: [3, 4, 5, 6, 7, 8, 9, 10, 11],
+      // Official docs: 4~12 s for Seedance 1.5 Pro.
+      supportedDurationSeconds: [4, 5, 6, 7, 8, 9, 10, 11, 12],
     },
     isConfigured: () => Boolean(resolveApiKey(api)),
     generateVideo: (req: VideoGenerationRequest) => generateVideoInternal(req, api),
@@ -258,13 +265,20 @@ export function buildSeedance15VideoProvider(api: OpenClawPluginApi): VideoGener
 }
 
 /**
- * Seedance 2.0 provider.
- * Supports up to 9 reference images, 3 reference videos, and 3 reference audios.
+ * Seedance 2.0 provider (Dreamina/即梦 platform models).
+ *
+ * NOTE: As of April 2026, Seedance 2.0 does NOT support API invocation via the BytePlus
+ * ModelArk public API. See: https://docs.byteplus.com/en/docs/ModelArk/1366799
+ * The `dreamina-seedance-2-0-*` models are served via the Dreamina/即梦 platform and are
+ * not accessible through the standard ARK_API_KEY endpoint.
+ *
+ * This provider is retained for forward compatibility and will throw at runtime until
+ * official API support is announced.
  */
 export function buildSeedance2VideoProvider(api: OpenClawPluginApi): VideoGenerationProvider {
   return {
     id: "byteplus-seedance2",
-    label: "BytePlus Seedance 2.0",
+    label: "BytePlus Seedance 2.0 (not yet API-accessible)",
     defaultModel: SEEDANCE2_DEFAULT_MODEL,
     models: [...SEEDANCE2_MODELS],
     capabilities: {
@@ -277,10 +291,15 @@ export function buildSeedance2VideoProvider(api: OpenClawPluginApi): VideoGenera
       maxInputImages: 9,
       maxInputVideos: 3,
       maxInputAudios: 3,
-      supportedDurationSeconds: [3, 4, 5, 6, 7, 8, 9, 10, 11],
+      supportedDurationSeconds: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
     },
     isConfigured: () => Boolean(resolveApiKey(api)),
-    generateVideo: (req: VideoGenerationRequest) => generateVideoInternal(req, api),
+    generateVideo: (_req: VideoGenerationRequest): Promise<VideoGenerationResult> => {
+      throw new Error(
+        "Seedance 2.0 is not yet available via the BytePlus ModelArk public API. " +
+          "See https://docs.byteplus.com/en/docs/ModelArk/1366799 for updates.",
+      );
+    },
   };
 }
 

@@ -155,14 +155,17 @@ export function buildSeedanceVideoProvider(api: OpenClawPluginApi): VideoGenerat
       providerOptions: {
         seed: "number",
         draft: "boolean",
-        camerafixed: "boolean",
+        // Matches the JSON-body API field name (camera_fixed); legacy text mode uses --camerafixed.
+        camera_fixed: "boolean",
       },
       supportsAspectRatio: true,
       supportsResolution: true,
       supportsWatermark: true,
-      // inputImages[0] → first frame, inputImages[1] → last frame (or use role field on each asset).
-      maxInputImages: 2,
-      supportedDurationSeconds: [4, 5, 6, 7, 8, 9, 10, 11, 12],
+      // seedance-1-0-lite-i2v-250428 supports up to 4 reference images (role: reference_image).
+      // Other 1.0 models accept at most 2 images (first_frame + last_frame).
+      maxInputImages: 4,
+      // Seedance 1.0 pro/lite support 2–12s; Seedance 1.5 pro supports 4–12s.
+      supportedDurationSeconds: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
     },
     isConfigured: () => Boolean(resolveApiKey(api)),
     generateVideo: async (req: VideoGenerationRequest): Promise<VideoGenerationResult> => {
@@ -178,7 +181,9 @@ export function buildSeedanceVideoProvider(api: OpenClawPluginApi): VideoGenerat
       const opts = req.providerOptions ?? {};
       const seed = typeof opts.seed === "number" ? opts.seed : undefined;
       const draft = opts.draft === true;
-      const camerafixed = typeof opts.camerafixed === "boolean" ? opts.camerafixed : undefined;
+      // providerOptions key is camera_fixed (matching the JSON body API field).
+      // The legacy text flag embedded in the prompt is still --camerafixed.
+      const camerafixed = typeof opts.camera_fixed === "boolean" ? opts.camera_fixed : undefined;
 
       // Resolve first/last frame URLs from three sources (in priority order):
       //   1. providerOptions.firstFrameImageUrl / lastFrameImageUrl (explicit override)
