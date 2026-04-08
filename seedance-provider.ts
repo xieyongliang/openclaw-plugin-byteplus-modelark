@@ -152,6 +152,11 @@ export function buildSeedanceVideoProvider(api: OpenClawPluginApi): VideoGenerat
     defaultModel: SEEDANCE_1_0_DEFAULT_MODEL,
     models: [...SEEDANCE_MODELS],
     capabilities: {
+      providerOptions: {
+        seed: "number",
+        draft: "boolean",
+        camerafixed: "boolean",
+      },
       supportsAspectRatio: true,
       supportsResolution: true,
       supportsWatermark: true,
