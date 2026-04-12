@@ -1,5 +1,5 @@
 {
-  "name": "byteplus-modelark",
+  "name": "xieyongliang-byteplus-modelark",
   "version": "2026.4.11",
   "description": "OpenClaw plugin for BytePlus ARK API — Seed/Kimi/GLM language models, Seedream image generation, and Seedance video generation",
   "type": "module",
@@ -59,7 +59,7 @@
       "byteplus-modelark-plan"
     ],
     "install": {
-      "npmSpec": "byteplus-modelark",
+      "npmSpec": "xieyongliang-byteplus-modelark",
       "defaultChoice": "npm"
     },
     "compat": {
